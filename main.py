@@ -32,7 +32,8 @@ if chosen_year and compare_year:
   # choose between display boundaries year vs year,
   # or display the changes from baseline reference in second map
   compare_type = st.radio("Select type of comparison",
-                          ["Static Year vs Year", "Changes Year over Year"])
+                          ["Static Year vs Year", "Changes Year over Year"],
+                          horizontal=True)
 
   constituency_list = sorted(gdf['ED_DESC'].unique().tolist())
 
@@ -55,6 +56,16 @@ if chosen_year and compare_year:
   st.session_state.selected_constituency = constituency
 
   if constituency:
+
+    # map setting
+    map = {"StreetMap":"OpenStreetMap", "Grayscale":"CartoDB positron"}
+    map_setting = st.radio("Select type of map",
+                          ["StreetMap", "Grayscale"],
+                          index=0,
+                          horizontal=True
+                          )
+
+    map_chosen = map[map_setting]
 
     # COMPUTE AREAS THAT WERE REMOVED (from baseline reference year)
     gdf_chosen = gdf[(gdf['year'] == chosen_year) & (gdf['ED_DESC'] == constituency)].copy().reset_index(drop=True)
@@ -92,11 +103,13 @@ if chosen_year and compare_year:
         m_chosen = folium.Map(
             location=[gdf_chosen.geometry.centroid.y.mean(), gdf_chosen.geometry.centroid.x.mean()],
             zoom_start=12,
-            max_zoom=21)
+            max_zoom=21,
+            tiles=map_chosen  # Use a greyscale tile layer
+        )
 
         tooltip = GeoJsonTooltip(
             fields=["year", "ED_DESC", "constituency_type", "pax_number", "result"],
-            #aliases=["State:", "2015 Median Income(USD):", "Median % Change:"],
+            aliases=["Year: ","ED: ","Type: ", "Pax: ", "Result: "],
             localize=True,
             sticky=True,
             labels=True,
@@ -131,11 +144,12 @@ if chosen_year and compare_year:
           m = folium.Map(
               location=[gdf_chosen_added.geometry.centroid.y.mean(), gdf_chosen_added.geometry.centroid.x.mean()],
               zoom_start=12,
-              max_zoom=21)
+              max_zoom=21,
+              tiles=map_chosen)
 
           tooltip = GeoJsonTooltip(
               fields=["year", "ED_DESC", "constituency_type", "pax_number", "result"],
-              #aliases=["State:", "2015 Median Income(USD):", "Median % Change:"],
+              aliases=["Year: ","ED: ","Type: ", "Pax: ", "Result: "],
               localize=True,
               sticky=True,
               labels=True,
@@ -171,11 +185,12 @@ if chosen_year and compare_year:
           m = folium.Map(
               location=[gdf_chosen.geometry.centroid.y.mean(), gdf_chosen.geometry.centroid.x.mean()],
               zoom_start=12,
-              max_zoom=21)
+              max_zoom=21,
+              tiles=map_chosen)
 
           tooltip1 = GeoJsonTooltip(
               fields=["year", "ED_DESC", "constituency_type", "pax_number", "result"],
-              #aliases=["State:", "2015 Median Income(USD):", "Median % Change:"],
+              aliases=["Year: ","ED: ","Type: ", "Pax: ", "Result: "],
               localize=True,
               sticky=True,
               labels=True,
@@ -190,7 +205,7 @@ if chosen_year and compare_year:
 
           tooltip2 = GeoJsonTooltip(
               fields=["year", "ED_DESC", "constituency_type", "pax_number", "result"],
-              #aliases=["State:", "2015 Median Income(USD):", "Median % Change:"],
+              aliases=["Year: ","ED: ","Type: ", "Pax: ", "Result: "],
               localize=True,
               sticky=True,
               labels=True,
