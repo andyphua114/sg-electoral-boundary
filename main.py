@@ -5,19 +5,21 @@ from folium.features import GeoJsonPopup, GeoJsonTooltip
 import geopandas as gpd
 
 from data_processing import process
+from compute_intersection import compute_intersect
 
 gdf = process()
 
 st.set_page_config(layout="wide")
 st.title('Electoral Boundary')
 
+# year selection for baseline reference
 chosen_year = st.selectbox(
     "Select the year as baseline",
     (gdf['year'].unique()),
     index=None,
 )
 
-
+# year selection for comparison against baseline reference
 compare_year = st.selectbox(
     "Select the year for comparison",
     (gdf['year'].unique()),
@@ -27,6 +29,8 @@ compare_year = st.selectbox(
 
 if chosen_year and compare_year:
 
+  # choose between display boundaries year vs year,
+  # or display the changes from baseline reference in second map
   compare_type = st.radio("Select type of comparison",
                           ["Static Year vs Year", "Changes Year over Year"])
 
@@ -40,6 +44,7 @@ if chosen_year and compare_year:
   if st.session_state.selected_constituency not in constituency_list:
     st.session_state.selected_constituency = None
  
+  # select the constituency
   constituency = st.selectbox(
       "Select the desired constituency",
       (constituency_list),
@@ -51,50 +56,25 @@ if chosen_year and compare_year:
 
   if constituency:
 
-    # AREAS THAT WERE REMOVED
+    # COMPUTE AREAS THAT WERE REMOVED (from baseline reference year)
     gdf_chosen = gdf[(gdf['year'] == chosen_year) & (gdf['ED_DESC'] == constituency)].copy().reset_index(drop=True)
     gdf_compare = gdf[(gdf['year'] == compare_year)].copy().reset_index(drop=True)
 
-    # get the interesection areas between the two selection years
-    intersect_idx = []
-    same_idx = None
-    for idx, row in gdf_compare.iterrows():
-        if gdf_compare.iloc[idx].ED_DESC != constituency:
-            if gdf_compare.iloc[idx:idx+1].reset_index().intersects(gdf_chosen.reset_index()).bool():
-                intersect_idx.append(idx)
+    if len(gdf_chosen) > 0:
+      intersect_polygon, ed_desc = compute_intersect(gdf_compare, gdf_chosen, constituency)
 
-    intersect_polygon = []
-    ed_desc = []
+      # convert to geodataframe
+      intersected_gpd = gpd.GeoDataFrame({'ED_DESC':ed_desc, 'geometry':intersect_polygon}, crs="4326")
+      # get constituency info
+      intersected_gpd = intersected_gpd.merge(gdf_compare[['year','ED_DESC','constituency_type','pax_number','result']], how='left', on=['ED_DESC'])
 
-    for i in intersect_idx:
-        intersect_polygon.append(gdf_chosen.geometry.intersection(gdf_compare.iloc[i].geometry).values[0])
-        ed_desc.append(gdf_compare.iloc[i].ED_DESC)
-
-    # convert to geodataframe
-    intersected_gpd = gpd.GeoDataFrame({'ED_DESC':ed_desc, 'geometry':intersect_polygon}, crs="4326")
-    # get constituency info
-    intersected_gpd = intersected_gpd.merge(gdf_compare[['year','ED_DESC','constituency_type','pax_number','result']], how='left', on=['ED_DESC'])
-
-    # AREAS THAT WERE ADDED
+    # AREAS THAT WERE ADDED (to baseline reference year to get compare year boundary)
     gdf_chosen_added = gdf[(gdf['year'] == compare_year) & (gdf['ED_DESC'] == constituency)].copy().reset_index(drop=True)
 
     if len(gdf_chosen_added) > 0:
       gdf_compare_added = gdf[(gdf['year'] == chosen_year)].copy().reset_index(drop=True)
 
-      # get the interesection areas between the two selection years
-      intersect_idx = []
-      same_idx = None
-      for idx, row in gdf_compare_added.iterrows():
-          if gdf_compare_added.iloc[idx].ED_DESC != constituency:
-              if gdf_compare_added.iloc[idx:idx+1].reset_index().intersects(gdf_chosen_added.reset_index()).bool():
-                  intersect_idx.append(idx)
-
-      intersect_polygon = []
-      ed_desc = []
-
-      for i in intersect_idx:
-          intersect_polygon.append(gdf_chosen_added.geometry.intersection(gdf_compare_added.iloc[i].geometry).values[0])
-          ed_desc.append(gdf_compare_added.iloc[i].ED_DESC)
+      intersect_polygon, ed_desc = compute_intersect(gdf_compare_added, gdf_chosen_added, constituency)
 
       # convert to geodataframe
       intersected_gpd_added = gpd.GeoDataFrame({'ED_DESC':ed_desc, 'geometry':intersect_polygon}, crs="4326")
