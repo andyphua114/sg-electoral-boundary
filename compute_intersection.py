@@ -11,7 +11,7 @@ def compute_intersect(gdf_all, gdf_single, constituency):
         if gdf_all.iloc[idx].ED_DESC != constituency:
             scaled_gdf_single = gdf_single.copy()
             scaled_gdf_single["geometry"] = scaled_gdf_single["geometry"].apply(
-                lambda x: scale(x, xfact=0.3, yfact=0.3, origin="centroid")
+                lambda x: scale(x, xfact=0.31, yfact=0.31, origin="centroid")
             )
             if (
                 gdf_all.iloc[idx : idx + 1]
