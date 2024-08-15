@@ -14,10 +14,10 @@ st.set_page_config(layout="wide")
 st.title("Electoral Boundary")
 
 st.write(
-    "The delineation of electoral boundaries is managed by the Electoral Boundaries Review Committee (EBRC). This process has sparked debate, with some critics labeling it as gerrymandering—a practice where electoral boundaries are manipulated to benefit a particular political party."
+    "The delineation of electoral boundaries in Singapore, managed by the Electoral Boundaries Review Committee (EBRC), plays a crucial role in shaping the political landscape. While the government asserts that these boundaries are drawn to serve the interests of Singaporeans and ensure fair representation, the process has faced scrutiny, with some critics accusing it of being a form of gerrymandering—a tactic where boundaries are altered to favor certain political outcomes."
 )
 st.write(
-    "This dashboard is designed to enable users to visualize and analyze changes in electoral boundaries across two election years, allowing them to draw their own conclusions about whether gerrymandering has occurred."
+    "This dashboard enables users to visualize and analyze changes in electoral boundaries across different election years, providing a tool to explore how shifts in voter distribution and constituency adjustments might impact electoral outcomes. Users can independently assess the implications of boundary changes and draw their own conclusions."
 )
 
 # year selection for baseline reference
@@ -39,12 +39,16 @@ if baseline_year and compare_year:
     # or display the changes from baseline reference in second map
     help_text = (
         '"Full Map" enables visualization of all electoral boundaries across two election years\n\n'
-        '"Static Year vs Year" enables visualization of a specified electorial division across two election years\n\n'
-        '"Changes Year over Year" enables visualization of the changes in boundaries for a specified electorial division across two election years\n'
+        '"Constituency Year vs Year" enables visualization of a specified electorial division/constituency across two election years\n\n'
+        '"Constituency Changes Year over Year" enables visualization of the changes in boundaries for a specified electorial division across two election years\n'
     )
     compare_type = st.radio(
         "Select type of comparison",
-        ["Full Map", "Static Year vs Year", "Changes Year over Year"],
+        [
+            "Full Map",
+            "Constituency Year vs Year",
+            "Constituency Changes Year over Year",
+        ],
         help=help_text,
         horizontal=True,
     )
@@ -146,7 +150,7 @@ if baseline_year and compare_year:
         col1, col2 = st.columns(2)
 
         with col1:
-            if compare_type == "Static Year vs Year":
+            if compare_type == "Constituency Year vs Year":
                 if len(gdf_baseline) == 0 and len(gdf_compare) == 0:
                     st.write("No such constituency in year {}".format(baseline_year))
                 elif len(gdf_baseline) == 0 and len(gdf_compare) > 0:
@@ -243,7 +247,7 @@ if baseline_year and compare_year:
                         # layer_control=layer_dict[layer],
                         key="map1",
                     )
-            elif compare_type == "Changes Year over Year":
+            elif compare_type == "Constituency Changes Year over Year":
                 if len(gdf_baseline) == 0:
                     st.write("No such constituency in year {}.".format(baseline_year))
                 elif len(gdf_baseline) > 0:  # and len(gdf_compare) == 0:
@@ -338,7 +342,7 @@ if baseline_year and compare_year:
                 )
 
         with col2:
-            if compare_type == "Static Year vs Year":
+            if compare_type == "Constituency Year vs Year":
                 if len(gdf_compare) == 0 and len(gdf_baseline) == 0:
                     st.write("No such constituency in year {}".format(compare_year))
                 elif len(gdf_compare) == 0 and len(gdf_baseline) > 0:
@@ -436,7 +440,7 @@ if baseline_year and compare_year:
                         key="map2.1",
                     )
 
-            elif compare_type == "Changes Year over Year":
+            elif compare_type == "Constituency Changes Year over Year":
                 if len(gdf_compare) == 0:
                     st.write("No such constituency in year {}.".format(compare_year))
                 elif len(gdf_baseline) == 0 and len(gdf_compare) > 0:
