@@ -6,6 +6,7 @@ import geopandas as gpd
 
 from data_processing import process
 from compute_intersection import compute_intersect
+from filter_intersection import filter_polygons
 
 gdf = process()
 
@@ -476,7 +477,15 @@ if baseline_year and compare_year:
                         max_width=300,
                     )
 
-                    folium.GeoJson(gdf_compare, tooltip=tooltip).add_to(m)
+                    # folium.GeoJson(gdf_compare, tooltip=tooltip).add_to(m)
+
+                    folium.GeoJson(
+                        gdf_compare,
+                        fillColor="blue",
+                        fill_opacity=0.05,
+                        tooltip=tooltip,
+                        name="m3",
+                    ).add_to(m)
 
                     st_folium(
                         m,
@@ -547,16 +556,39 @@ if baseline_year and compare_year:
                     )
 
                     folium.GeoJson(
-                        intersected_gpd, tooltip=tooltip1, name="m1", color="red"
+                        gdf_compare,
+                        fillColor="blue",
+                        fill_opacity=0.2,
+                        name="m3",
                     ).add_to(m)
 
-                    if (len(gdf_compare)) > 0:
+                    intersected_gpd = filter_polygons(intersected_gpd)
+
+                    if len(intersected_gpd) != 0:
                         folium.GeoJson(
-                            intersected_gpd_added,
-                            tooltip=tooltip2,
-                            name="m2",
-                            color="green",
+                            intersected_gpd, tooltip=tooltip1, name="m1", color="red"
                         ).add_to(m)
+                    else:
+                        folium.GeoJson(intersected_gpd, name="m1", color="red").add_to(
+                            m
+                        )
+
+                    if (len(gdf_compare)) > 0:
+                        intersected_gpd_added = filter_polygons(intersected_gpd_added)
+
+                        if len(intersected_gpd_added) != 0:
+                            folium.GeoJson(
+                                intersected_gpd_added,
+                                tooltip=tooltip2,
+                                name="m2",
+                                color="green",
+                            ).add_to(m)
+                        else:
+                            folium.GeoJson(
+                                intersected_gpd_added,
+                                name="m2",
+                                color="green",
+                            ).add_to(m)
 
                     st_folium(
                         m,
